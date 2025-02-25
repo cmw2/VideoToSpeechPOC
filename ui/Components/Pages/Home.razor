@@ -1,0 +1,41 @@
+﻿@page "/"
+@using VideoIndexer.Model
+@inject VideoIndexer.VideoIndexerClient VideoIndexerClient
+
+<PageTitle>Home</PageTitle>
+
+<h1>Video List</h1>
+
+@if (videos == null)
+{
+    <p>Loading...</p>
+}
+else if (videos.Count == 0)
+{
+    <p>No videos found.</p>
+}
+else
+{
+    <ul>
+        @foreach (var video in videos)
+        {
+            <li>@video.Name</li>
+        }
+    </ul>
+}
+
+@code {
+    private List<Video> videos;
+
+    protected override async Task OnInitializedAsync()
+    {
+        try
+        {
+            videos = await VideoIndexerClient.GetVideosAsync();
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Error loading videos: {ex.Message}");
+        }
+    }
+}

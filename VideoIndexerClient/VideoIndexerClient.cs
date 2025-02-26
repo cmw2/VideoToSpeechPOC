@@ -113,19 +113,19 @@ namespace VideoIndexer
         /// <param name="waitForIndex"> should this method wait for index operation to complete </param>
         /// <exception cref="Exception"></exception>
         /// <returns> Video Id of the video being indexed, otherwise throws excpetion</returns>
-        public async Task<string> UploadUrlAsync(string videoUrl , string videoName, string exludedAIs = null, bool waitForIndex = false )
+        public async Task<string> UploadUrlAsync(string videoUrl, string videoName, string videoDescription, string exludedAIs = null, bool waitForIndex = false)
         {
             await EnsureAccountInitializedAsync();
 
             _logger.LogInformation($"Video for account {_account.Properties.Id} is starting to upload.");
-            
+
             try
             {
-                //Build Query Parameter Dictionary
+                // Build Query Parameter Dictionary
                 var queryDictionary = new Dictionary<string, string>
                 {
                     { "name", videoName },
-                    { "description", "video_description" },
+                    { "description", videoDescription },
                     { "privacy", "private" },
                     { "accessToken" , _accountAccessToken },
                     { "videoUrl" , videoUrl }
@@ -133,9 +133,9 @@ namespace VideoIndexer
 
                 if (!Uri.IsWellFormedUriString(videoUrl, UriKind.Absolute))
                 {
-                    throw new ArgumentException("VideoUrl or LocalVidePath are invalid");
+                    throw new ArgumentException("VideoUrl is invalid");
                 }
-                
+
                 var queryParams = queryDictionary.CreateQueryString();
                 if (!string.IsNullOrEmpty(exludedAIs))
                     queryParams += AddExcludedAIs(exludedAIs);
@@ -149,7 +149,7 @@ namespace VideoIndexer
                 // Get the video ID from the upload result
                 var videoId = JsonSerializer.Deserialize<Video>(uploadResult).Id;
                 _logger.LogInformation($"Video ID {videoId} was uploaded successfully");
-                
+
                 if (waitForIndex)
                 {
                     _logger.LogInformation("Waiting for Index Operation to Complete");

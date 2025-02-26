@@ -1,5 +1,7 @@
 ﻿using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Options;
 using VideoIndexer.Auth;
 using VideoIndexer.Options;
 
@@ -25,6 +27,9 @@ public static class ServiceCollectionExtensions
                 AllowAutoRedirect = false
             };
         });
+
+        // Register VideoIndexerClient as a singleton
+        services.AddSingleton<VideoIndexerClient>();
 
         return services;
     }

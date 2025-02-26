@@ -49,20 +49,8 @@ else
 }
 
 <h2>Add New Video</h2>
-<EditForm EditContext="editContext" OnValidSubmit="HandleValidSubmit" FormName="VideoSubmitForm">
-    <DataAnnotationsValidator />
-    <ValidationSummary />
-    <div class="mb-3">
-        <label for="videoName" class="form-label">Video Name</label>
-        <InputText id="videoName" class="form-control" @bind-Value="newVideoName" />
-    </div>
-    <div class="mb-3">
-        <label for="videoDescription" class="form-label">Video Description</label>
-        <InputText id="videoDescription" class="form-control" @bind-Value="newVideoDescription" />
-    </div>
-    <div class="mb-3">
-        <label for="videoUrl" class="form-label">Video URL</label>
-        <InputText id="videoUrl" class="form-control" @bind-Value="newVideoUrl" />
-    </div>
-    <button type="submit" class="btn btn-primary">Add Video</button>
-</EditForm>
+<p>
+    <NavLink class="btn btn-primary" href="/add-video-url">Add Video by URL</NavLink>
+   @*  <NavLink class="btn btn-primary" href="/add-video-upload">Add Video by Uploading</NavLink> *@
+</p>
+

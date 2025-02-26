@@ -237,12 +237,9 @@ namespace VideoIndexer
             }
         }
 
-        public async Task<string> FileUploadAsync(string videoName,  string mediaPath, string exludedAIs = null)
+        public async Task<string> FileUploadAsync(string videoName,  string fileName, Stream fileStream, string videoDescription, string exludedAIs = null)
         {
             await EnsureAccountInitializedAsync();
-
-            if (!File.Exists(mediaPath))
-                throw new Exception($"Could not find file at path {mediaPath}");
 
             var queryParams = new Dictionary<string, string>
             {
@@ -260,9 +257,9 @@ namespace VideoIndexer
             // Create multipart form data content
             using var content = new MultipartFormDataContent();
             // Add file content
-            await using var fileStream = new FileStream(mediaPath, FileMode.Open, FileAccess.Read);
+            //await using var fileStream = new FileStream(mediaPath, FileMode.Open, FileAccess.Read);
             using var streamContent = new StreamContent(fileStream);
-            content.Add(streamContent, "fileName", Path.GetFileName(mediaPath));
+            content.Add(streamContent, "fileName", fileName);
             _logger.LogInformation("Uploading a local file using multipart/form-data post request..");
             // Send POST request
             var response = await _httpClient.PostAsync(url, content);

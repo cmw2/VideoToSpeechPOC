@@ -8,7 +8,12 @@
 {
     <p>@statusMessage</p>
 }
-else if (videos == null || videos.Count == 0)
+
+@if (videos == null)
+{
+    <p>Loading...</p>
+}
+else if (videos.Count == 0)
 {
     <p>No videos found.</p>
 }
@@ -42,3 +47,14 @@ else
         </tbody>
     </table>
 }
+
+<h2>Add New Video</h2>
+<EditForm Model="@this" OnValidSubmit="HandleValidSubmit" FormName="AddVideoUrl">
+    <DataAnnotationsValidator />
+    <ValidationSummary />
+    <div class="mb-3">
+        <label for="videoUrl" class="form-label">Video URL</label>
+        <InputText id="videoUrl" class="form-control" @bind-Value="newVideoUrl" />
+    </div>
+    <button type="submit" class="btn btn-primary">Add Video</button>
+</EditForm>

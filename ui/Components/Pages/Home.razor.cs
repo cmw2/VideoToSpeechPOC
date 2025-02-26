@@ -14,6 +14,8 @@ namespace VideoToSpeechPOC.Components.Pages
 
         private List<Video> videos = new();
         private string statusMessage = string.Empty;
+        [SupplyParameterFromForm]
+        private string newVideoUrl { get; set; }
 
         protected override async Task OnInitializedAsync()
         {
@@ -38,6 +40,28 @@ namespace VideoToSpeechPOC.Components.Pages
         {
             var timeSpan = TimeSpan.FromSeconds(durationInSeconds);
             return $"{(int)timeSpan.TotalHours}h {timeSpan.Minutes}m";
+        }
+
+        private async Task HandleValidSubmit()
+        {
+            try
+            {
+                statusMessage = "Uploading video...";
+                StateHasChanged();
+
+                var videoId = await VideoIndexerClient.UploadUrlAsync(newVideoUrl, "New Video");
+                statusMessage = $"Video uploaded successfully with ID: {videoId}";
+
+                // Refresh the video list
+                videos = await VideoIndexerClient.GetVideosAsync();
+            }
+            catch (Exception ex)
+            {
+                statusMessage = $"Error uploading video: {ex.Message}";
+                Logger.LogError(ex, "Error uploading video");
+            }
+
+            StateHasChanged();
         }
     }
 }

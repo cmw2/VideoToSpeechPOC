@@ -89,7 +89,7 @@ namespace VideoIndexer
                 request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", _armAccessToken);
 
                 var result = await _httpClient.SendAsync(request);
-                result.VerifyStatus(System.Net.HttpStatusCode.OK);
+                await result.VerifyStatusAsync(System.Net.HttpStatusCode.OK);
 
                 var jsonResponseBody = await result.Content.ReadAsStringAsync();
                 var account = JsonSerializer.Deserialize<Account>(jsonResponseBody);
@@ -144,7 +144,7 @@ namespace VideoIndexer
                 // Send POST request
                 var url = $"{_options.ApiEndpoint}/{_account.Location}/Accounts/{_account.Properties.Id}/Videos?{queryParams}";
                 var uploadRequestResult = await _httpClient.PostAsync(url, null);
-                uploadRequestResult.VerifyStatus(System.Net.HttpStatusCode.OK);
+                await uploadRequestResult.VerifyStatusAsync(System.Net.HttpStatusCode.OK);
                 var uploadResult = await uploadRequestResult.Content.ReadAsStringAsync();
 
                 // Get the video ID from the upload result
@@ -186,7 +186,7 @@ namespace VideoIndexer
 
                 var requestUrl = $"{_options.ApiEndpoint}/{_account.Location}/Accounts/{_account.Properties.Id}/Videos/{videoId}/Index?{queryParams}";
                 var videoGetIndexRequestResult = await _httpClient.GetAsync(requestUrl);
-                videoGetIndexRequestResult.VerifyStatus(System.Net.HttpStatusCode.OK);
+                await videoGetIndexRequestResult.VerifyStatusAsync(System.Net.HttpStatusCode.OK);
                 var videoGetIndexResult = await videoGetIndexRequestResult.Content.ReadAsStringAsync();
                 var processingState = JsonSerializer.Deserialize<Video>(videoGetIndexResult).State;
 
@@ -228,7 +228,7 @@ namespace VideoIndexer
             {
                 var requestUrl = $"{_options.ApiEndpoint}/{_account.Location}/Accounts/{_account.Properties.Id}/Videos/Search?{queryParams}";
                 var response = await _httpClient.GetAsync(requestUrl);
-                response.VerifyStatus(System.Net.HttpStatusCode.OK);
+                await response.VerifyStatusAsync(System.Net.HttpStatusCode.OK);
                 var responseBody = await response.Content.ReadAsStringAsync();
                 var videoResponse = JsonSerializer.Deserialize<VideoResponse>(responseBody);
                 return videoResponse?.Results?.FirstOrDefault() ?? null;
@@ -298,7 +298,7 @@ namespace VideoIndexer
             {
                 var requestUrl = $"{_options.ApiEndpoint}/{_account.Location}/Accounts/{_account.Properties.Id}/Videos/{videoId}/InsightsWidget?{queryParams}";
                 var insightsWidgetRequestResult = await _httpClient.GetAsync(requestUrl);
-                insightsWidgetRequestResult.VerifyStatus(System.Net.HttpStatusCode.MovedPermanently);
+                await insightsWidgetRequestResult.VerifyStatusAsync(System.Net.HttpStatusCode.MovedPermanently);
                 var insightsWidgetLink = insightsWidgetRequestResult.Headers.Location;
                 _logger.LogInformation($"Got the insights widget URL: \n{insightsWidgetLink}");
             }
@@ -329,7 +329,7 @@ namespace VideoIndexer
                 var playerWidgetRequestResult = await _httpClient.GetAsync(requestUrl);
 
                 var playerWidgetLink = playerWidgetRequestResult.Headers.Location;
-                playerWidgetRequestResult.VerifyStatus(System.Net.HttpStatusCode.MovedPermanently);
+                await playerWidgetRequestResult.VerifyStatusAsync(System.Net.HttpStatusCode.MovedPermanently);
                 _logger.LogInformation($"Got the player widget URL: \n{playerWidgetLink}");
             }
             catch (Exception ex)
@@ -353,7 +353,7 @@ namespace VideoIndexer
 
                 var requestUrl = $"{_options.ApiEndpoint}/{_account.Location}/Accounts/{_account.Properties.Id}/Videos?{queryParams}";
                 var response = await _httpClient.GetAsync(requestUrl);
-                response.VerifyStatus(System.Net.HttpStatusCode.OK);
+                await response.VerifyStatusAsync(System.Net.HttpStatusCode.OK);
                 var responseBody = await response.Content.ReadAsStringAsync();
                 var videoResponse = JsonSerializer.Deserialize<VideoResponse>(responseBody);
                 return videoResponse?.Results ?? new List<Video>();
@@ -398,7 +398,7 @@ namespace VideoIndexer
                 // List Video Summaries
                 var listSummariesUrl = $"{_options.ApiEndpoint}/{_account.Location}/Accounts/{_account.Properties.Id}/Videos/{videoId}/Summaries/Textual?{queryParams}";
                 var listSummariesResult = await _httpClient.GetAsync(listSummariesUrl);
-                listSummariesResult.VerifyStatus(System.Net.HttpStatusCode.OK);
+                await listSummariesResult.VerifyStatusAsync(System.Net.HttpStatusCode.OK);
                 var listSummariesResponse = await listSummariesResult.Content.ReadAsStringAsync();
                 var summariesResponse = JsonSerializer.Deserialize<VideoSummaryResponse>(listSummariesResponse);
 
@@ -409,7 +409,7 @@ namespace VideoIndexer
                 {
                     var getSummaryUrl = $"{_options.ApiEndpoint}/{_account.Location}/Accounts/{_account.Properties.Id}/Videos/{videoId}/Summaries//Textual/{summary.Id}?{queryParams}";
                     var getSummaryResult = await _httpClient.GetAsync(getSummaryUrl);
-                    getSummaryResult.VerifyStatus(System.Net.HttpStatusCode.OK);
+                    await getSummaryResult.VerifyStatusAsync(System.Net.HttpStatusCode.OK);
                     var getSummaryResponse = await getSummaryResult.Content.ReadAsStringAsync();
                     var summaryContent = JsonSerializer.Deserialize<VideoSummaryContent>(getSummaryResponse);
                     summaryContents.Add(summaryContent);
@@ -420,6 +420,44 @@ namespace VideoIndexer
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Error getting video summaries");
+                throw;
+            }
+        }
+        public async Task RequestVideoSummaryAsync(string videoId, string length, string style, string includedFrames = "", string deploymentName = "gpt-4o")
+        {
+            await EnsureAccountInitializedAsync();
+
+            _logger.LogInformation($"Requesting summary for video {videoId}");
+
+            var queryParams = new Dictionary<string, string>
+            {
+                { "accessToken", _accountAccessToken },
+                { "length", length },
+                { "style", style }
+            };
+
+            if (!string.IsNullOrEmpty(deploymentName))
+            {
+                queryParams.Add("deploymentName", deploymentName);
+            }
+
+            if (!string.IsNullOrEmpty(includedFrames))
+            {
+                queryParams.Add("includedFrames", includedFrames);
+            }
+
+            var queryString = queryParams.CreateQueryString();
+            var requestUrl = $"{_options.ApiEndpoint}/{_account.Location}/Accounts/{_account.Properties.Id}/Videos/{videoId}/Summaries/Textual?{queryString}";
+
+            try
+            {
+                var response = await _httpClient.PostAsync(requestUrl, null);
+                await response.VerifyStatusAsync(System.Net.HttpStatusCode.Accepted);
+                _logger.LogInformation($"Summary request for video {videoId} accepted.");
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error requesting video summary");
                 throw;
             }
         }

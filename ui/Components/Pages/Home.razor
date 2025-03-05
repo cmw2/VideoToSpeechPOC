@@ -57,9 +57,9 @@ else
     </EditForm>
 }
 
-@if (! String.IsNullOrEmpty(SelectedVideoId))
+@if (!String.IsNullOrEmpty(SelectedVideoId))
 {
-    var selectedVideo = videos.FirstOrDefault(v => v.Id == selectedVideoId);
+    var selectedVideo = videos.FirstOrDefault(v => v.Id == SelectedVideoId);
     if (selectedVideo != null)
     {
     <h2>Video Details</h2>
@@ -75,16 +75,30 @@ else
             <ul>
                 @foreach (var summary in selectedVideoSummaries)
                 {
-                    if (summary != null)
-                    {
-                        <li>@((MarkupString)(summary.Replace("\n", "<br />")))</li>
-                    }
+                    <li><div style="white-space: pre-wrap;">@summary</div></li>
                 }
             </ul>
         }
         else if (selectedVideoSummaries != null)
         {
             <p>No summaries available for the selected video.</p>
+            <div>
+                <label for="summaryLength">Summary Length:</label>
+                <select id="summaryLength" @bind="summaryLength">
+                    <option value="Short">Short</option>
+                    <option value="Medium">Medium</option>
+                    <option value="Long">Long</option>
+                </select>
+            </div>
+            <div>
+                <label for="summaryStyle">Summary Style:</label>
+                <select id="summaryStyle" @bind="summaryStyle">
+                    <option value="Neutral">Neutral</option>
+                    <option value="Casual">Casual</option>
+                    <option value="Formal">Formal</option>
+                </select>
+            </div>
+            <button @onclick="RequestSummaryAsync">Request Summary</button>
         }
         else
         {

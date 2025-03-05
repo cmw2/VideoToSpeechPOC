@@ -31,6 +31,9 @@ namespace VideoToSpeechPOC.Components.Pages
             }
         }
 
+        private string summaryLength = "Medium"; // Default to Medium
+        private string summaryStyle = "Neutral"; // Default to Neutral
+
         protected override async Task OnInitializedAsync()
         {
             if (videos.Count == 0)
@@ -60,6 +63,16 @@ namespace VideoToSpeechPOC.Components.Pages
                 var summaries = await VideoIndexerClient.GetVideoSummaryAsync(videoId);
                 selectedVideoSummaries = summaries.Select(s => s.Summary).ToList();
                 StateHasChanged(); // Trigger a re-render to show the selected video details and summary
+            }
+        }
+
+        private async Task RequestSummaryAsync()
+        {
+            if (!string.IsNullOrEmpty(SelectedVideoId))
+            {
+                await VideoIndexerClient.RequestVideoSummaryAsync(SelectedVideoId, length: summaryLength, style: summaryStyle);
+                statusMessage = "Summary request submitted. Please wait for the summary to be generated.";
+                StateHasChanged(); // Trigger a re-render to show the status message
             }
         }
 

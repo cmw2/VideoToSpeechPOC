@@ -6,7 +6,7 @@ using System.Web;
 namespace VideoIndexer.Utils
 {
     public static class HttpClientUtils
-    {   
+    {
         public static string CreateQueryString(this IDictionary<string, string> parameters)
         {
             var queryParameters = HttpUtility.ParseQueryString(string.Empty);
@@ -17,11 +17,12 @@ namespace VideoIndexer.Utils
             return queryParameters.ToString();
         }
 
-        public static void VerifyStatus(this HttpResponseMessage response, System.Net.HttpStatusCode excpectedStatusCode)
+        public static async Task VerifyStatusAsync(this HttpResponseMessage response, System.Net.HttpStatusCode expectedStatusCode)
         {
-            if (response.StatusCode != excpectedStatusCode)
+            if (response.StatusCode != expectedStatusCode)
             {
-                throw new Exception(response.ToString());
+                var responseBody = await response.Content.ReadAsStringAsync();
+                throw new Exception($"Unexpected status code: {response.StatusCode}. Response body: {responseBody}");
             }
         }
     }

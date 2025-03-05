@@ -1,4 +1,5 @@
 ﻿@page "/"
+@rendermode InteractiveServer
 
 <PageTitle>Video To Speech POC</PageTitle>
 
@@ -19,31 +20,75 @@ else if (videos.Count == 0)
 }
 else
 {
-    <table class="table">
-        <thead>
-            <tr>
-                <th>Name</th>
-                <th>Id</th>
-                <th>Description</th>
-                <th>Created</th>
-                <th>Last Indexed</th>
-                <th>State</th>
-                <th>Duration</th>
-            </tr>
-        </thead>
-        <tbody>
-            @foreach (var video in videos)
-            {
-                <tr>
-                    <td>@video.Name</td>
-                    <td>@video.Id</td>
-                    <td style="white-space: normal;">@video.Description</td>
-                    <td>@video.Created.ToShortDateString()</td>
-                    <td>@video.LastIndexed.ToShortDateString()</td>
-                    <td>@video.State</td>
-                    <td>@FormatDuration(video.DurationInSeconds)</td>
-                </tr>
-            }
-        </tbody>
-    </table>
+    <EditForm Model="this">
+        <InputRadioGroup @bind-Value="SelectedVideoId">
+            <table class="table">
+                <thead>
+                    <tr>
+                        <th>Select</th>
+                        <th>Name</th>
+                        <th>Id</th>
+                        <th>Description</th>
+                        <th>Created</th>
+                        <th>Last Indexed</th>
+                        <th>State</th>
+                        <th>Duration</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var video in videos)
+                    {
+                        <tr>
+                            <td>
+                                <InputRadio Value="video.Id" />
+                            </td>
+                            <td>@video.Name</td>
+                            <td>@video.Id</td>
+                            <td style="white-space: normal;">@video.Description</td>
+                            <td>@video.Created.ToShortDateString()</td>
+                            <td>@video.LastIndexed.ToShortDateString()</td>
+                            <td>@video.State</td>
+                            <td>@FormatDuration(video.DurationInSeconds)</td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </InputRadioGroup>
+    </EditForm>
+}
+
+@if (! String.IsNullOrEmpty(SelectedVideoId))
+{
+    var selectedVideo = videos.FirstOrDefault(v => v.Id == selectedVideoId);
+    if (selectedVideo != null)
+    {
+    <h2>Video Details</h2>
+        <p><strong>Name:</strong> @selectedVideo.Name</p>
+        <p><strong>Description:</strong> @selectedVideo.Description</p>
+        <p><strong>Created:</strong> @selectedVideo.Created.ToShortDateString()</p>
+        <p><strong>Last Indexed:</strong> @selectedVideo.LastIndexed.ToShortDateString()</p>
+        <p><strong>State:</strong> @selectedVideo.State</p>
+        <p><strong>Duration:</strong> @FormatDuration(selectedVideo.DurationInSeconds)</p>
+        <h3>Video Summaries</h3>
+        @if (selectedVideoSummaries != null && selectedVideoSummaries.Count > 0)
+        {
+            <ul>
+                @foreach (var summary in selectedVideoSummaries)
+                {
+                    if (summary != null)
+                    {
+                        <li>@((MarkupString)(summary.Replace("\n", "<br />")))</li>
+                    }
+                }
+            </ul>
+        }
+        else if (selectedVideoSummaries != null)
+        {
+            <p>No summaries available for the selected video.</p>
+        }
+        else
+        {
+            <p>Loading summaries.</p>
+        }
+    }
 }

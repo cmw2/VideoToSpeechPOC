@@ -12,6 +12,7 @@ using VideoIndexer.Options;
 using VideoIndexer.Auth;
 using VideoIndexer.Model;
 using VideoIndexer.Utils;
+using Azure;
 
 namespace VideoIndexer
 {
@@ -212,11 +213,11 @@ namespace VideoIndexer
         /// </summary>
         /// <param name="videoId"> The video id </param>
         /// <returns> Prints the video metadata, otherwise throws excpetion</returns>
-        public async Task GetVideoAsync(string videoId)
+        public async Task<Video?> GetVideoAsync(string videoId)
         {
             await EnsureAccountInitializedAsync();
 
-            _logger.LogInformation($"Searching videos in account {_account.Properties.Id} for video ID {videoId}.");
+            _logger.LogInformation($"Getting details for video ID {videoId}.");
             var queryParams = new Dictionary<string, string>()
             {
                 {"id", videoId},
@@ -226,14 +227,16 @@ namespace VideoIndexer
             try
             {
                 var requestUrl = $"{_options.ApiEndpoint}/{_account.Location}/Accounts/{_account.Properties.Id}/Videos/Search?{queryParams}";
-                var searchRequestResult = await _httpClient.GetAsync(requestUrl);
-                searchRequestResult.VerifyStatus(System.Net.HttpStatusCode.OK);
-                var searchResult = await searchRequestResult.Content.ReadAsStringAsync();
-                _logger.LogInformation($"Here are the search results: \n{searchResult}");
+                var response = await _httpClient.GetAsync(requestUrl);
+                response.VerifyStatus(System.Net.HttpStatusCode.OK);
+                var responseBody = await response.Content.ReadAsStringAsync();
+                var videoResponse = JsonSerializer.Deserialize<VideoResponse>(responseBody);
+                return videoResponse?.Results?.FirstOrDefault() ?? null;
             }
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Error getting Video");
+                throw;
             }
         }
 
@@ -378,6 +381,46 @@ namespace VideoIndexer
             {
                 _logger.LogError($"{nameof(accountName)} {accountName} not found. Check {nameof(_options.SubscriptionId)}, {nameof(_options.ResourceGroupName)}, {nameof(accountName)} are valid.");
                 throw new Exception($"Account {accountName} not found.");
+            }
+        }
+        public async Task<List<VideoSummaryContent>> GetVideoSummaryAsync(string videoId)
+        {
+            await EnsureAccountInitializedAsync();
+
+            _logger.LogInformation($"Getting the list of summaries for video {videoId}");
+            var queryParams = new Dictionary<string, string>()
+            {
+                { "accessToken" , _accountAccessToken }
+            }.CreateQueryString();
+
+            try
+            {
+                // List Video Summaries
+                var listSummariesUrl = $"{_options.ApiEndpoint}/{_account.Location}/Accounts/{_account.Properties.Id}/Videos/{videoId}/Summaries/Textual?{queryParams}";
+                var listSummariesResult = await _httpClient.GetAsync(listSummariesUrl);
+                listSummariesResult.VerifyStatus(System.Net.HttpStatusCode.OK);
+                var listSummariesResponse = await listSummariesResult.Content.ReadAsStringAsync();
+                var summariesResponse = JsonSerializer.Deserialize<VideoSummaryResponse>(listSummariesResponse);
+
+                var summaryContents = new List<VideoSummaryContent>();
+
+                // Get each summary's content
+                foreach (var summary in summariesResponse.Items)
+                {
+                    var getSummaryUrl = $"{_options.ApiEndpoint}/{_account.Location}/Accounts/{_account.Properties.Id}/Videos/{videoId}/Summaries//Textual/{summary.Id}?{queryParams}";
+                    var getSummaryResult = await _httpClient.GetAsync(getSummaryUrl);
+                    getSummaryResult.VerifyStatus(System.Net.HttpStatusCode.OK);
+                    var getSummaryResponse = await getSummaryResult.Content.ReadAsStringAsync();
+                    var summaryContent = JsonSerializer.Deserialize<VideoSummaryContent>(getSummaryResponse);
+                    summaryContents.Add(summaryContent);
+                }
+
+                return summaryContents;
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error getting video summaries");
+                throw;
             }
         }
 

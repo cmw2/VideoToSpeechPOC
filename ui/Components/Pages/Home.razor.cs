@@ -15,24 +15,52 @@ namespace VideoToSpeechPOC.Components.Pages
 
         private List<Video> videos = new();
         private string statusMessage = string.Empty;
+        [SupplyParameterFromForm]
+        private string selectedVideoId { get; set; }
+        private List<string>? selectedVideoSummaries;
+        private string? SelectedVideoId
+        {
+            get => selectedVideoId;
+            set
+            {
+                if (selectedVideoId != value)
+                {
+                    selectedVideoId = value;
+                    OnVideoSelected(selectedVideoId);
+                }
+            }
+        }
 
         protected override async Task OnInitializedAsync()
         {
-            statusMessage = "Loading videos...";
-            StateHasChanged(); // Trigger a re-render to show the loading message
-
-            try
+            if (videos.Count == 0)
             {
-                videos = await VideoIndexerClient.GetVideosAsync();
-                statusMessage = string.Empty;
-            }
-            catch (Exception ex)
-            {
-                statusMessage = $"Error loading videos: {ex.Message}";
-                Logger.LogError(ex, "Error loading videos");
-            }
+                statusMessage = "Loading videos...";
+                StateHasChanged(); // Trigger a re-render to show the loading message
 
-            StateHasChanged(); // Trigger a re-render to update the UI with the videos or error message
+                try
+                {
+                    videos = await VideoIndexerClient.GetVideosAsync();
+                    statusMessage = string.Empty;
+                }
+                catch (Exception ex)
+                {
+                    statusMessage = $"Error loading videos: {ex.Message}";
+                    Logger.LogError(ex, "Error loading videos");
+                }
+
+                StateHasChanged(); // Trigger a re-render to update the UI with the videos or error message
+            }
+        }
+
+        private async Task OnVideoSelected(string videoId)
+        {
+            if (!string.IsNullOrEmpty(videoId))
+            {
+                var summaries = await VideoIndexerClient.GetVideoSummaryAsync(videoId);
+                selectedVideoSummaries = summaries.Select(s => s.Summary).ToList();
+                StateHasChanged(); // Trigger a re-render to show the selected video details and summary
+            }
         }
 
         private string FormatDuration(double durationInSeconds)

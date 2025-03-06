@@ -75,7 +75,23 @@ else
             <ul>
                 @foreach (var summary in selectedVideoSummaries)
                 {
-                    <li><div style="white-space: pre-wrap;">@summary</div></li>
+                    <li>
+                        <div style="white-space: pre-wrap;">@summary.Value.Summary</div>
+                        <h4 class="card-title">Generate audio file</h4>
+                        <button @onclick="async () => await GenerateAudio(summary.Key)" class="btn btn-primary" disabled="@(isProcessing)">Generate Audio</button>
+                        <div>
+                            @if (!string.IsNullOrEmpty(summary.Value.AudioFileToken))
+                            {
+                                <audio controls>
+                                    <source src="@($"api/audio/{summary.Value.AudioFileToken}")" type="audio/wav">
+                                    Your browser does not support the audio element.
+                                </audio>
+                                <p>
+                                    <a href="@($"api/audio/{summary.Value.AudioFileToken}")" download>Download Audio File</a>
+                                </p>
+                            }
+                        </div>
+                    </li>
                 }
             </ul>
         }

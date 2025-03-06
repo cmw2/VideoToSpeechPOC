@@ -2,6 +2,7 @@
 using Microsoft.AspNetCore.Components.Forms;
 using VideoIndexer;
 using VideoIndexer.Model;
+using VideoToSpeechPOC.Data;
 
 namespace VideoToSpeechPOC.Components.Pages
 {
@@ -13,11 +14,15 @@ namespace VideoToSpeechPOC.Components.Pages
         [Inject]
         private ILogger<Home> Logger { get; set; } = default!;
 
+        [Inject]
+        private AzureSpeechService SpeechService { get; set; }
+
         private List<Video> videos = new();
         private string statusMessage = string.Empty;
+        private bool isProcessing = false;
         [SupplyParameterFromForm]
-        private string selectedVideoId { get; set; }
-        private List<string>? selectedVideoSummaries;
+        private string? selectedVideoId { get; set; }
+        private Dictionary<string, VideoSummaryInfoViewModel>? selectedVideoSummaries;
         private string? SelectedVideoId
         {
             get => selectedVideoId;
@@ -26,7 +31,7 @@ namespace VideoToSpeechPOC.Components.Pages
                 if (selectedVideoId != value)
                 {
                     selectedVideoId = value;
-                    OnVideoSelected(selectedVideoId);
+                    _ = OnVideoSelected(selectedVideoId);
                 }
             }
         }
@@ -56,13 +61,17 @@ namespace VideoToSpeechPOC.Components.Pages
             }
         }
 
-        private async Task OnVideoSelected(string videoId)
+        private async Task OnVideoSelected(string? videoId)
         {
             if (!string.IsNullOrEmpty(videoId))
             {
                 var summaries = await VideoIndexerClient.GetVideoSummaryAsync(videoId);
-                selectedVideoSummaries = summaries.Select(s => s.Summary).ToList();
+                selectedVideoSummaries = summaries.ToDictionary(s => s.Id, s => new VideoSummaryInfoViewModel { Summary = s.Summary });
                 StateHasChanged(); // Trigger a re-render to show the selected video details and summary
+            }
+            else
+            {
+                selectedVideoSummaries = null;
             }
         }
 
@@ -80,6 +89,34 @@ namespace VideoToSpeechPOC.Components.Pages
         {
             var timeSpan = TimeSpan.FromSeconds(durationInSeconds);
             return $"{(int)timeSpan.TotalHours}h {timeSpan.Minutes}m";
+        }
+
+        private async Task GenerateAudio(string summaryId)
+        {
+            if (selectedVideoSummaries != null && selectedVideoSummaries.TryGetValue(summaryId, out var summaryInfo))
+            {
+                var llmOutput = summaryInfo.Summary;
+                if (!string.IsNullOrEmpty(llmOutput))
+                {
+                    isProcessing = true;
+                    statusMessage = "Processing...";
+                    try
+                    {
+                        summaryInfo.AudioFileToken = await SpeechService.SynthesizeSpeechToFileAsync(llmOutput);
+                        statusMessage = "Audio file generated successfully.";
+                    }
+                    catch (Exception ex)
+                    {
+                        statusMessage = $"Error: {ex.Message}";
+                        Logger.LogError(ex, "Error generating audio");
+                    }
+                    finally
+                    {
+                        isProcessing = false;
+                        StateHasChanged(); // Trigger a re-render to update the UI
+                    }
+                }
+            }
         }
     }
 }

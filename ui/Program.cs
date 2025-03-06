@@ -1,14 +1,19 @@
 using VideoToSpeechPOC.Components;
 using VideoIndexer.Extensions;
-
+using VideoToSpeechPOC.Options;
+using VideoToSpeechPOC.Data;
 
 var builder = WebApplication.CreateBuilder(args);
 
 builder.Services.AddAzureVideoIndexer(builder.Configuration.GetSection("AzureVideoIndexer"));
+builder.Services.Configure<AzureSpeechOptions>(builder.Configuration.GetSection("AzureSpeech"));
+builder.Services.AddSingleton<FileService>();
+builder.Services.AddSingleton<AzureSpeechService>();
 
 // Add services to the container.
 builder.Services.AddRazorComponents()
     .AddInteractiveServerComponents();
+builder.Services.AddControllers();
 
 var app = builder.Build();
 
@@ -27,5 +32,6 @@ app.UseAntiforgery();
 
 app.MapRazorComponents<App>()
     .AddInteractiveServerRenderMode();
+app.MapControllers();
 
 app.Run();

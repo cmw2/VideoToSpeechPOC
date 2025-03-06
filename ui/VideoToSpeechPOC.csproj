@@ -16,7 +16,6 @@
 
   <ItemGroup>
     <Folder Include="Development\unsafe_uploads\" />
-    <Folder Include="Models\" />
   </ItemGroup>
 
   <ItemGroup>

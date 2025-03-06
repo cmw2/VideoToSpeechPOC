@@ -82,23 +82,23 @@ else
         else if (selectedVideoSummaries != null)
         {
             <p>No summaries available for the selected video.</p>
-            <div>
+            <div class="form-group">
                 <label for="summaryLength">Summary Length:</label>
-                <select id="summaryLength" @bind="summaryLength">
+                <select id="summaryLength" class="form-control" @bind="summaryLength">
                     <option value="Short">Short</option>
                     <option value="Medium">Medium</option>
                     <option value="Long">Long</option>
                 </select>
             </div>
-            <div>
+            <div class="form-group">
                 <label for="summaryStyle">Summary Style:</label>
-                <select id="summaryStyle" @bind="summaryStyle">
+                <select id="summaryStyle" class="form-control" @bind="summaryStyle">
                     <option value="Neutral">Neutral</option>
                     <option value="Casual">Casual</option>
                     <option value="Formal">Formal</option>
                 </select>
             </div>
-            <button @onclick="RequestSummaryAsync">Request Summary</button>
+            <button class="btn btn-primary" @onclick="RequestSummaryAsync">Request Summary</button>
         }
         else
         {

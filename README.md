@@ -4,7 +4,7 @@
 This project is a Proof of Concept (POC) for generating a summary of a video and then converting that summary to speech using Azure AI Services. The application allows users to upload a file, generate the summary, and convert the summary to an audio file. The audio file can then be downloaded for further use.
 
 ## Sample Code
-This repository contains sample code intended for demonstration purposes. It showcases how to integrate Azure Cognitive Services for text extraction and speech synthesis. The code is provided as-is and may require modifications to fit specific use cases or production environments.
+This repository contains sample code intended for demonstration purposes. It showcases how to integrate Azure Cognitive Services for video summarization and speech synthesis. The code is provided as-is and may require modifications to fit specific use cases or production environments.
 
 ## Getting Started
 
@@ -23,11 +23,7 @@ This repository contains sample code intended for demonstration purposes. It sho
     cd VideoToSpeechPOC
     ```
 
-1. Restore the dependencies:
-    ```sh
-    dotnet restore
-    ```
-
+1. Open the VideoToSpeechPOC.sln file in Visual Studio
 1. Open the `appsettings.json` file and update the following sections with your Azure credentials:
 
     ```json
@@ -53,30 +49,18 @@ This repository contains sample code intended for demonstration purposes. It sho
     }
     ```
 
-    For security reasons, it is recommended to use dotnet user-secrets to store sensitive information such as API keys. Here is how you can set up dotnet user-secrets:
-    1. Initialize user secrets in your project:
-        ```sh
-        dotnet user-secrets init
-        ```
-    1. Set the secrets using the following commands:
-        ```sh
-        dotnet user-secrets set "AzureSpeech:ApiKey" "YOUR_AZURE_SPEECH_API_KEY"
-        ```
-    In this manner the keys won't be checked into your source code.
+    For security reasons, it is recommended to use dotnet user-secrets to store sensitive information such as API keys. Use the Visual Studio "Manage User Secrets" functionality (right click the project in Solution Explorer) to edit the secrets json.  Paste in the json from above and enter the secrets.  Remove the elements that don't include secrets.
 
 ### Running the Application
-1. Build and run the application:
-    ```sh
-    dotnet run
-    ```
-
-2. Open your browser and navigate to `https://localhost:5001` to access the application.
+1. Run the application in Visual Studio.
 
 ### Usage
-1. Upload a file using the "Upload a file" menu item.
-2. Track the progress of file processing from the home page.
-3. Select a processed file to view it's details and the text summaries
-4. ...
+1. If you don't have any videos uploaded, you can use the "Add Video" options in the menu.
+1. Track the progress of file processing from the home page.
+1. Select a processed file to view it's details and the text summaries
+1. If there aren't any summaries, click the "Request Summary" button to generate a summary.
+1. For existing summaires, click the "Generate Speech" button to convert the summary to speech.
+1. Listen to the generated speech or use the download link to save the file locally.
 
 ## Additional Information
 - **Technologies Used**: ASP.NET Core, Blazor (Server), Azure Open AI, Azure AI Video Indexer, Azure Speech Service

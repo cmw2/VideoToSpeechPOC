@@ -247,7 +247,7 @@ namespace VideoIndexer
             var queryParams = new Dictionary<string, string>
             {
                 { "name", videoName },
-                { "description", "video_description" },
+                { "description", videoDescription },
                 { "privacy", "private" },
                 { "accessToken" , _accountAccessToken },
                 { "partition", "partition" }

@@ -3,6 +3,12 @@
 <PageTitle>Add Video by URL</PageTitle>
 
 <h2>Add New Video by URL</h2>
+
+@if (!string.IsNullOrEmpty(statusMessage))
+{
+    <p>@statusMessage</p>
+}
+
 <EditForm EditContext="editContext" OnValidSubmit="HandleValidSubmit" FormName="VideoUrlSubmitForm">
     <DataAnnotationsValidator />
     <ValidationSummary />

@@ -1,7 +1,9 @@
 using Microsoft.AspNetCore.Components;
 using Microsoft.AspNetCore.Components.Forms;
+using Microsoft.Extensions.Options;
 using VideoIndexer;
 using VideoIndexer.Model;
+using VideoToSpeechPOC.Options;
 
 namespace VideoToSpeechPOC.Components.Pages
 {
@@ -12,6 +14,9 @@ namespace VideoToSpeechPOC.Components.Pages
 
         [Inject]
         private ILogger<AddVideoByUpload> Logger { get; set; } = default!;
+        
+        [Inject]
+        private IOptions<FileUploadOptions> FileUploadOptions { get; set; } = default!;
 
         private string statusMessage = string.Empty;
         [SupplyParameterFromForm]
@@ -45,7 +50,9 @@ namespace VideoToSpeechPOC.Components.Pages
 
                 if (selectedFile != null)
                 {
-                    var videoId = await VideoIndexerClient.FileUploadAsync(newVideoName, selectedFile.Name, selectedFile.OpenReadStream() ,newVideoDescription);
+                    long maxFileSize = FileUploadOptions.Value.MaxFileSize;
+                    Stream fileStream = selectedFile.OpenReadStream(maxFileSize);
+                    var videoId = await VideoIndexerClient.FileUploadAsync(newVideoName, selectedFile.Name, fileStream ,newVideoDescription);
                     statusMessage = $"Video uploaded successfully with ID: {videoId}";
                 }
 

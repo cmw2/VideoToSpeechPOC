@@ -1,8 +1,15 @@
 ﻿@page "/add-video-upload"
+@rendermode InteractiveServer
 
 <PageTitle>Add Video by Uploading</PageTitle>
 
 <h2>Add New Video by Uploading</h2>
+
+@if (!string.IsNullOrEmpty(statusMessage))
+{
+    <p>@statusMessage</p>
+}
+
 <EditForm EditContext="editContext" OnValidSubmit="HandleValidSubmit" FormName="VideoFileSubmitForm">
     <DataAnnotationsValidator />
     <ValidationSummary />
